@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yacht Rock Radio - Audio Visualizer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛥️</text></svg>">
     <style>
         * {
             margin: 0;
@@ -336,16 +337,16 @@
 
     <script>
         const stations = [
-            { name: "Smooth Jazz", url: "https://stream.smoothjazz.com/smoothjazz" },
-            { name: "Yacht Rock Radio", url: "https://yachtrock.stream.publicradio.org/yachtrock.mp3" },
-            { name: "Smooth Lounge", url: "https://stream.smoothlounge.com.au/smoothlounge.mp3" },
-            { name: "Jazz24", url: "https://live.wostreaming.net/direct/ppm-jazz24aac-ibc1" },
-            { name: "Smooth Jazz Florida", url: "https://us4.internet-radio.com/proxy/wsjf?mp=/stream" },
-            { name: "181.FM Smooth Jazz", url: "https://listen.181fm.com/181-smoothjazz_128k.mp3" },
-            { name: "Smooth Jazz 247", url: "https://smoothjazz.cdnstream1.com/2586_128.mp3" },
-            { name: "Smooth Chill", url: "https://media-ice.musicradio.com/SmoothChill" },
-            { name: "Smooth Radio UK", url: "https://media-ice.musicradio.com/SmoothUK" },
-            { name: "Smooth Jazz Global", url: "https://smoothjazz.global.ssl.fastly.net/smoothjazz" }
+            { name: "181.fm Yacht Rock", url: "https://listen.181fm.com/181-yachtrock_128k.mp3" },
+            { name: "SomaFM Left Coast 70s", url: "https://ice5.somafm.com/seventies-128-mp3" },
+            { name: "Yacht Rock Miami", url: "https://a9.asurahosting.com:7070/radio.mp3" },
+            { name: "Classic Hits 109 – Yacht Rock", url: "http://51.161.117.123:5485/stream" },
+            { name: "Classic Hits 109 – Yacht & Mellow Gold", url: "http://144.217.79.175:6984/stream" },
+            { name: "LITT Live Yacht Rock", url: "https://das-sa39.cdnstream1.com/5605_128" },
+            { name: "Yacht Rock (hearme.fm)", url: "http://radio.hearme.fm:8650/stream" },
+            { name: "Yacht Rock Miami Alt", url: "https://usa20.fastcast4u.com:4100/;" },
+            { name: "181.fm Super 70s", url: "https://listen.181fm.com/181-70s_128k.mp3" },
+            { name: "181.fm Mellow Gold", url: "https://listen.181fm.com/181-mellow_128k.mp3" }
         ];
 
         let currentStation = null;
@@ -385,7 +386,6 @@
             const playPauseBtn = document.getElementById('playPauseBtn');
             playPauseBtn.disabled = false;
 
-            // Reset audio to clear any previous errors
             audio.pause();
             audio.src = '';
             audio.load();
@@ -461,7 +461,6 @@
             }
         }
 
-        // Audio event handlers
         audio.onplay = () => {
             const statusEl = document.getElementById('stationStatus');
             statusEl.textContent = '♫ Now playing';
@@ -507,7 +506,6 @@
             statusEl.className = 'status buffering';
         };
 
-        // Simulated audio-reactive visualizer
         function animateVisualizer() {
             const bars = document.querySelectorAll('.bar');
             let time = 0;
@@ -538,7 +536,6 @@
             loop();
         }
 
-        // Canvas ocean animation
         const canvas = document.getElementById('ocean');
         const ctx = canvas.getContext('2d');
 
@@ -589,7 +586,6 @@
         }
         renderOcean();
 
-        // Initialize visualizer bars
         const visualizerContainer = document.getElementById('visualizerBars');
         for (let i = 0; i < 40; i++) {
             const bar = document.createElement('div');
@@ -599,7 +595,6 @@
         
         animateVisualizer();
 
-        // Keyboard navigation for volume icon
         document.getElementById('volumeIcon').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
