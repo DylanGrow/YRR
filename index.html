@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#04131f" />
+  <meta name="description" content="Luxury yacht rock radio PWA with cinematic visuals and premium audio." />
+
+  <title>Yacht Gold</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <link rel="preconnect" href="https://ice1.somafm.com" crossorigin />
+  <link rel="preconnect" href="https://stream.radioparadise.com" crossorigin />
+
+  <style>
+    :root {
+      --bg: #04131f;
+      --bg2: #08273d;
+      --gold: #d8b24d;
+      --gold-soft: #ffe7a6;
+      --text: #f4f7fb;
+      --muted: rgba(255, 255, 255, 0.6);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(216,178,77,.1), transparent 40%),
+        linear-gradient(135deg, var(--bg) 0%, var(--bg2) 55%, #0d3652 100%);
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Screen-reader utility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Premium Glassmorphism Player */
+    .player-card {
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .station-info h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--gold-soft);
+      margin-bottom: 0.5rem;
+    }
+
+    .station-info p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      color: var(--gold);
+      transform: scale(1.05);
+    }
+
+    button:active {
+      transform: scale(0.95);
+    }
+
+    .play-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--gold);
+      color: var(--bg);
+      box-shadow: 0 8px 24px rgba(216, 178, 77, 0.3);
+    }
+
+    .play-btn:hover {
+      background: var(--gold-soft);
+      color: var(--bg);
+      box-shadow: 0 12px 32px rgba(216, 178, 77, 0.4);
+    }
+
+    .play-btn svg {
+      width: 32px;
+      height: 32px;
+      fill: currentColor;
+      margin-left: 4px; /* Optical alignment for play button */
+      transition: margin 0.2s;
+    }
+
+    .play-btn.playing svg {
+      margin-left: 0;
+    }
+
+    /* Volume Slider */
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--muted);
+    }
+
+    .volume-container svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      background: transparent;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: var(--gold);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="sr-only">
+    <h1>Yacht Gold Radio</h1>
+  </header>
+
+  <canvas id="visualizer" aria-hidden="true"></canvas>
+
+  <main>
+    <article class="player-card">
+      <div class="station-info">
+        <h2 id="station-name">Left Coast 70s</h2>
+        <p>Smooth Yacht Rock</p>
+      </div>
+
+      <div class="controls">
+        <button class="play-btn" id="play-btn" aria-label="Play">
+          <svg id="icon-play" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="icon-pause" viewBox="0 0 24 24" style="display: none;">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="volume-container">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.7" aria-label="Volume control" />
+      </div>
+    </article>
+  </main>
+
+  <script>
+    // --- Cinematic Wave Visualizer ---
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas.getContext('2d');
+    let width, height, time = 0;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function drawWaves() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.lineWidth = 1.5;
+      
+      // Your 8-iteration loop, converted into overlapping oceanic waves
+      for (let i = 0; i < 8; i++) {
+        ctx.beginPath();
+        // Subtle gold tones, fading out into the background
+        ctx.strokeStyle = `rgba(216, 178, 77, ${0.03 + (i * 0.015)})`;
+        
+        for (let x = 0; x <= width; x += 20) {
+          // Math magic for slow, gentle yacht-like swells
+          let y = height * 0.6 + 
+                  Math.sin(x * 0.003 + time + i) * (40 + i * 15) + 
+                  Math.cos(x * 0.002 - time + i) * 20;
+          
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      
+      time += 0.005; // Slow, luxurious speed
+      requestAnimationFrame(drawWaves);
+    }
+    drawWaves();
+
+    // --- Audio Player Logic ---
+    const audio = new Audio();
+    audio.crossOrigin = "anonymous";
+    audio.src = "https://ice1.somafm.com/seventies-128-mp3"; // SomaFM Left Coast 70s
+    audio.volume = 0.7;
+
+    const playBtn = document.getElementById('play-btn');
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const volumeSlider = document.getElementById('volume');
+    
+    let isPlaying = false;
+
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+        iconPause.style.display = 'none';
+        iconPlay.style.display = 'block';
+        playBtn.classList.remove('playing');
+        playBtn.setAttribute('aria-label', 'Play');
+      } else {
+        audio.play();
+        iconPlay.style.display = 'none';
+        iconPause.style.display = 'block';
+        playBtn.classList.add('playing');
+        playBtn.setAttribute('aria-label', 'Pause');
+      }
+      isPlaying = !isPlaying;
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      audio.volume = e.target.value;
+    });
+
+    // Error handling
+    audio.addEventListener('error', () => {
+      document.getElementById('station-name').innerText = "Stream Offline";
+    });
+  </script>
+</body>
+</html>
