@@ -1,193 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#04131f" />
-  <meta name="description" content="Luxury yacht rock radio PWA with cinematic visuals and premium audio." />
-
-  <title>Yacht Gold</title>
-
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-
-  <link rel="preconnect" href="https://ice1.somafm.com" crossorigin />
-  <link rel="preconnect" href="https://stream.radioparadise.com" crossorigin />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yacht Rock Radio - Audio Visualizer</title>
   <style>
-    :root {
-      --bg: #04131f;
-      --bg2: #08273d;
-      --gold: #d8b24d;
-      --gold-soft: #ffe7a6;
-      --text: #f4f7fb;
-      --muted: rgba(255, 255, 255, 0.6);
-      --glass: rgba(255, 255, 255, 0.05);
-      --border: rgba(255, 255, 255, 0.1);
-      --shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-    }
-
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      background: var(--bg);
+      box-sizing: border-box;
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #0a1428;
+      color: #ffffff;
+      height: 100vh;
       overflow: hidden;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(216,178,77,.1), transparent 40%),
-        linear-gradient(135deg, var(--bg) 0%, var(--bg2) 55%, #0d3652 100%);
-      display: grid;
-      place-items: center;
-      padding: 1rem;
     }
 
-    canvas {
-      position: fixed;
-      inset: 0;
+    #ocean {
+      display: block;
       width: 100%;
       height: 100%;
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    .sr-only {
       position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    .player-card {
-      background: var(--glass);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: var(--shadow);
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-
-    .station-info {
-      min-height: 60px; /* Prevents layout jump when text changes */
-    }
-
-    .station-info h2 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      color: var(--gold-soft);
-      margin-bottom: 0.5rem;
-      transition: opacity 0.3s ease;
-    }
-
-    .station-info p {
-      font-size: 0.9rem;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      transition: opacity 0.3s ease;
+      top: 0;
+      left: 0;
     }
 
     .controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2rem;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+      padding: 2.5rem 2rem 3rem;
+      backdrop-filter: blur(5px);
     }
 
-    button {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: var(--text);
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #00d4ff, #00a8cc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .station-grid {
       display: grid;
-      place-items: center;
-      transition: all 0.2s ease;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    button:hover {
-      color: var(--gold);
+    .station-btn {
+      padding: 0.875rem 1rem;
+      border: 2px solid rgba(0, 212, 255, 0.3);
+      background: rgba(26, 58, 82, 0.6);
+      color: #ffffff;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      backdrop-filter: blur(10px);
     }
 
-    button:active {
-      transform: scale(0.95);
+    .station-btn:hover {
+      border-color: #00d4ff;
+      background: rgba(0, 180, 220, 0.15);
+      transform: translateY(-2px);
     }
 
-    .skip-btn svg {
-      width: 28px;
-      height: 28px;
-      fill: currentColor;
+    .station-btn.active {
+      background: linear-gradient(135deg, #00d4ff, #0099cc);
+      color: #0a1428;
+      border-color: #00d4ff;
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.1);
+      font-weight: 600;
     }
 
-    .play-btn {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: var(--gold);
-      color: var(--bg);
-      box-shadow: 0 8px 24px rgba(216, 178, 77, 0.3);
-    }
-
-    .play-btn:hover {
-      background: var(--gold-soft);
-      color: var(--bg);
-      box-shadow: 0 12px 32px rgba(216, 178, 77, 0.4);
-      transform: scale(1.05);
-    }
-
-    .play-btn svg {
-      width: 32px;
-      height: 32px;
-      fill: currentColor;
-      margin-left: 4px;
-      transition: margin 0.2s;
-    }
-
-    .play-btn.playing svg {
-      margin-left: 0;
-    }
-
-    .volume-container {
+    .info {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      color: var(--muted);
+      gap: 2rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .volume-container svg {
-      width: 20px;
-      height: 20px;
-      fill: currentColor;
-      flex-shrink: 0;
-    }
-
-    input[type=range] {
+    .info-content {
       flex: 1;
-      -webkit-appearance: none;
-      background: transparent;
-      height: 4px;
-      border-radius: 2px;
-      background: var(--border);
-      outline: none;
     }
+
+    .station-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #00d4ff;
+      margin-bottom: 0.5rem;
+    }
+
+    .status {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: 0.5px;
+    }
+
+    .status.playing {
+      color: #00ff88;
+    }
+
+    .visualizer-bars {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 100px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      padding: 1.5rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.4));
+      justify-content: center;
+    }
+
+    .bar {
+      flex: 1;
+      background: linear-gradient(to top, #00ffff, #0099cc);
+      min-height: 2px;
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+      max-width: 12px;
+      transition: height 0.05s linear;
+    }
+
+    .bar:nth-child(odd) {
+      background: linear-gradient(to top, #00d4ff, #0066ff);
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        padding: 1.5rem 1rem 2rem;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .station-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 0.5rem;
+      }
+
+      .station-btn {
+        padding: 0.75rem 0.75rem;
+        font-size: 12px;
+      }
+
+      .info {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .visualizer-bars {
+        height: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="ocean"></canvas>
+
+  <div class="controls">
+    <div class="header">
+      <h1>🛥️ Yacht Rock Radio</h1>
+      <p>Smooth grooves for the sophisticated ear</p>
+    </div>
+
+    <div class="station-grid" id="stationGrid"></div>
+
+    <div class="info">
+      <div class="info-content">
+        <div class="station-name" id="stationName">Select a station</div>
+        <div class="status" id="stationStatus">Ready to set sail</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="visualizer-bars" id="visualizerBars"></div>
+
+  <script>
+    const stations = [
+      { name: "Smooth Sailing", url: "https://stream.example.com/yacht1" },
+      { name: "Tawatha Nights", url: "https://stream.example.com/yacht2" },
+      { name: "Sunset Marina", url: "https://stream.example.com/yacht3" },
+      { name: "Coastal Dreams", url: "https://stream.example.com/yacht4" },
+      { name: "Silk & Strings", url: "https://stream.example.com/yacht5" },
+      { name: "Ocean Grooves", url: "https://stream.example.com/yacht6" },
+      { name: "Champagne Vibes", url: "https://stream.example.com/yacht7" },
+      { name: "Crystal Waters", url: "https://stream.example.com/yacht8" },
+      { name: "Midnight Breeze", url: "https://stream.example.com/yacht9" },
+      { name: "Island Paradise", url: "https://stream.example.com/yacht10" }
+    ];
+
+    let currentStation = null;
+    let audioCtx = null;
+    let analyser = null;
+    let audio = new Audio();
+    audio.crossOrigin = "anonymous";
+
+    const stationGrid = document.getElementById('stationGrid');
+    stations.forEach((station, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'station-btn';
+      btn.textContent = station.name;
+      btn.onclick = () => playStation(idx, btn);
+      stationGrid.appendChild(btn);
+    });
+
+    function playStation(idx, btn) {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        const source = audioCtx.createMediaElementAudioSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        animateVisualizer();
+      }
+
+      document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentStation = idx;
+      const station = stations[idx];
+      document.getElementById('stationName').textContent = station.name;
+      const statusEl = document.getElementById('stationStatus');
+      statusEl.textContent = '⏳ Loading...';
+      statusEl.classList.remove('playing');
+
+      audio.src = station.url;
+      audio.play().catch(e => {
+        statusEl.textContent = '⚠️ Unable to load stream';
+        statusEl.classList.remove('playing');
+      });
+
+      audio.onplay = () => {
+        statusEl.textContent = '♫ Now playing';
+        statusEl.classList.add('playing');
+      };
+
+      audio.onpause = () => {
+        statusEl.textContent = '⏸️ Paused';
+        statusEl.classList.remove('playing');
+      };
+    }
+
+    function animateVisualizer() {
+      if (!analyser) return;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      const bars = document.querySelectorAll('.bar');
+
+      function loop() {
+        analyser.getByteFrequencyData(data);
+        bars.forEach((bar, i) => {
+          const value = data[i] || 0;
+          const height = Math.max(10, value * 0.5);
+          bar.style.height = `${height}px`;
+        });
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    const canvas = document.getElementById('ocean');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    let wave = 0;
+    function renderOcean() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#050d1a');
+      gradient.addColorStop(0.4, '#0a1f3a');
+      gradient.addColorStop(0.7, '#1a3a5a');
+      gradient.addColorStop(1, '#2d5a8a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      wave += 0.003;
+
+      for (let i = 0; i < 8; i++) {
+        ctx.strokeStyle = `rgba(0, 180, 220, ${0.35 - i * 0.04})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+
+        for (let x = 0; x <= canvas.width; x += 10) {
+          const y =
+            canvas.height * 0.55 +
+            Math.sin(x * 0.005 + wave + i * 0.5) * 50 +
+            Math.sin(x * 0.003 + wave * 0.5) * 30 +
+            i * 22;
+
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      requestAnimationFrame(renderOcean);
+    }
+    renderOcean();
+
+    for (let i = 0; i < 40; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      document.getElementById('visualizerBars').appendChild(bar);
+    }
+
+    audio.onended = () => {
+      document.getElementById('stationStatus').textContent = '⏹️ Finished';
+      document.getElementById('stationStatus').classList.remove('playing');
+    };
+  </script>
+</body>
+</html>
