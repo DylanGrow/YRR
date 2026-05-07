@@ -1,364 +1,612 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yacht Rock Radio - Audio Visualizer</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #0a1428;
-      color: #ffffff;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #ocean {
-      display: block;
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    .controls {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
-      padding: 2.5rem 2rem 3rem;
-      backdrop-filter: blur(5px);
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .header h1 {
-      font-size: 32px;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #00d4ff, #00a8cc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .header p {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .station-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 2rem;
-      max-width: 1200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .station-btn {
-      padding: 0.875rem 1rem;
-      border: 2px solid rgba(0, 212, 255, 0.3);
-      background: rgba(26, 58, 82, 0.6);
-      color: #ffffff;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      backdrop-filter: blur(10px);
-    }
-
-    .station-btn:hover {
-      border-color: #00d4ff;
-      background: rgba(0, 180, 220, 0.15);
-      transform: translateY(-2px);
-    }
-
-    .station-btn.active {
-      background: linear-gradient(135deg, #00d4ff, #0099cc);
-      color: #0a1428;
-      border-color: #00d4ff;
-      box-shadow: 0 0 25px rgba(0, 212, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.1);
-      font-weight: 600;
-    }
-
-    .info {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      padding: 1.5rem;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 212, 255, 0.2);
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .info-content {
-      flex: 1;
-    }
-
-    .station-name {
-      font-size: 18px;
-      font-weight: 600;
-      color: #00d4ff;
-      margin-bottom: 0.5rem;
-    }
-
-    .status {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.6);
-      letter-spacing: 0.5px;
-    }
-
-    .status.playing {
-      color: #00ff88;
-    }
-
-    .visualizer-bars {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 100px;
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      padding: 1.5rem;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.4));
-      justify-content: center;
-    }
-
-    .bar {
-      flex: 1;
-      background: linear-gradient(to top, #00ffff, #0099cc);
-      min-height: 2px;
-      border-radius: 2px;
-      box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
-      max-width: 12px;
-      transition: height 0.05s linear;
-    }
-
-    .bar:nth-child(odd) {
-      background: linear-gradient(to top, #00d4ff, #0066ff);
-    }
-
-    @media (max-width: 768px) {
-      .controls {
-        padding: 1.5rem 1rem 2rem;
-      }
-
-      .header h1 {
-        font-size: 24px;
-      }
-
-      .station-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 0.5rem;
-      }
-
-      .station-btn {
-        padding: 0.75rem 0.75rem;
-        font-size: 12px;
-      }
-
-      .info {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-      }
-
-      .visualizer-bars {
-        height: 80px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <canvas id="ocean"></canvas>
-
-  <div class="controls">
-    <div class="header">
-      <h1>🛥️ Yacht Rock Radio</h1>
-      <p>Smooth grooves for the sophisticated ear</p>
-    </div>
-
-    <div class="station-grid" id="stationGrid"></div>
-
-    <div class="info">
-      <div class="info-content">
-        <div class="station-name" id="stationName">Select a station</div>
-        <div class="status" id="stationStatus">Ready to set sail</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="visualizer-bars" id="visualizerBars"></div>
-
-  <script>
-    const stations = [
-      { name: "Smooth Sailing", url: "https://stream.example.com/yacht1" },
-      { name: "Tawatha Nights", url: "https://stream.example.com/yacht2" },
-      { name: "Sunset Marina", url: "https://stream.example.com/yacht3" },
-      { name: "Coastal Dreams", url: "https://stream.example.com/yacht4" },
-      { name: "Silk & Strings", url: "https://stream.example.com/yacht5" },
-      { name: "Ocean Grooves", url: "https://stream.example.com/yacht6" },
-      { name: "Champagne Vibes", url: "https://stream.example.com/yacht7" },
-      { name: "Crystal Waters", url: "https://stream.example.com/yacht8" },
-      { name: "Midnight Breeze", url: "https://stream.example.com/yacht9" },
-      { name: "Island Paradise", url: "https://stream.example.com/yacht10" }
-    ];
-
-    let currentStation = null;
-    let audioCtx = null;
-    let analyser = null;
-    let audio = new Audio();
-    audio.crossOrigin = "anonymous";
-
-    const stationGrid = document.getElementById('stationGrid');
-    stations.forEach((station, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'station-btn';
-      btn.textContent = station.name;
-      btn.onclick = () => playStation(idx, btn);
-      stationGrid.appendChild(btn);
-    });
-
-    function playStation(idx, btn) {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        const source = audioCtx.createMediaElementAudioSource(audio);
-        source.connect(analyser);
-        analyser.connect(audioCtx.destination);
-        animateVisualizer();
-      }
-
-      document.querySelectorAll('.station-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      currentStation = idx;
-      const station = stations[idx];
-      document.getElementById('stationName').textContent = station.name;
-      const statusEl = document.getElementById('stationStatus');
-      statusEl.textContent = '⏳ Loading...';
-      statusEl.classList.remove('playing');
-
-      audio.src = station.url;
-      audio.play().catch(e => {
-        statusEl.textContent = '⚠️ Unable to load stream';
-        statusEl.classList.remove('playing');
-      });
-
-      audio.onplay = () => {
-        statusEl.textContent = '♫ Now playing';
-        statusEl.classList.add('playing');
-      };
-
-      audio.onpause = () => {
-        statusEl.textContent = '⏸️ Paused';
-        statusEl.classList.remove('playing');
-      };
-    }
-
-    function animateVisualizer() {
-      if (!analyser) return;
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      const bars = document.querySelectorAll('.bar');
-
-      function loop() {
-        analyser.getByteFrequencyData(data);
-        bars.forEach((bar, i) => {
-          const value = data[i] || 0;
-          const height = Math.max(10, value * 0.5);
-          bar.style.height = `${height}px`;
-        });
-        requestAnimationFrame(loop);
-      }
-      loop();
-    }
-
-    const canvas = document.getElementById('ocean');
-    const ctx = canvas.getContext('2d');
-
-    function resize() {
-      canvas.width = innerWidth;
-      canvas.height = innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-
-    let wave = 0;
-    function renderOcean() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#050d1a');
-      gradient.addColorStop(0.4, '#0a1f3a');
-      gradient.addColorStop(0.7, '#1a3a5a');
-      gradient.addColorStop(1, '#2d5a8a');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      wave += 0.003;
-
-      for (let i = 0; i < 8; i++) {
-        ctx.strokeStyle = `rgba(0, 180, 220, ${0.35 - i * 0.04})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-
-        for (let x = 0; x <= canvas.width; x += 10) {
-          const y =
-            canvas.height * 0.55 +
-            Math.sin(x * 0.005 + wave + i * 0.5) * 50 +
-            Math.sin(x * 0.003 + wave * 0.5) * 30 +
-            i * 22;
-
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yacht Rock Radio - Audio Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        ctx.lineTo(canvas.width, canvas.height);
-        ctx.lineTo(0, canvas.height);
-        ctx.closePath();
-        ctx.fill();
-      }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a1428;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-      requestAnimationFrame(renderOcean);
-    }
-    renderOcean();
+        #ocean {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
 
-    for (let i = 0; i < 40; i++) {
-      const bar = document.createElement('div');
-      bar.className = 'bar';
-      document.getElementById('visualizerBars').appendChild(bar);
-    }
+        .controls {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
+            padding: 2.5rem 2rem 3rem;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
 
-    audio.onended = () => {
-      document.getElementById('stationStatus').textContent = '⏹️ Finished';
-      document.getElementById('stationStatus').classList.remove('playing');
-    };
-  </script>
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #00d4ff, #00a8cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .station-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .station-btn {
+            padding: 0.875rem 1rem;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            background: rgba(26, 58, 82, 0.6);
+            color: #ffffff;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .station-btn:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 180, 220, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .station-btn:focus-visible {
+            outline: 2px solid #00d4ff;
+            outline-offset: 2px;
+        }
+
+        .station-btn.active {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #0a1428;
+            border-color: #00d4ff;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .controls-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .play-pause-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid #00d4ff;
+            background: rgba(0, 212, 255, 0.2);
+            color: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .play-pause-btn:hover {
+            background: rgba(0, 212, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .play-pause-btn:focus-visible {
+            outline: 2px solid #00d4ff;
+            outline-offset: 2px;
+        }
+
+        .play-pause-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+        }
+
+        .volume-icon {
+            font-size: 16px;
+            cursor: pointer;
+            user-select: none;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .info-content {
+            flex: 1;
+        }
+
+        .station-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.5px;
+        }
+
+        .status.playing {
+            color: #00ff88;
+        }
+
+        .status.buffering {
+            color: #ffaa00;
+        }
+
+        .visualizer-bars {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            padding: 1.5rem;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.4));
+            justify-content: center;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #00ffff, #0099cc);
+            min-height: 2px;
+            height: 4px;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.8);
+            max-width: 12px;
+            transition: height 0.05s linear;
+        }
+
+        .bar:nth-child(odd) {
+            background: linear-gradient(to top, #00d4ff, #0066ff);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                padding: 1.5rem 1rem 2rem;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .station-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .station-btn {
+                padding: 0.75rem 0.75rem;
+                font-size: 12px;
+            }
+
+            .info {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .controls-section {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .play-pause-btn {
+                width: 100%;
+            }
+
+            .volume-control {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .volume-slider {
+                flex: 1;
+                max-width: 200px;
+            }
+
+            .visualizer-bars {
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="ocean"></canvas>
+
+    <div class="controls">
+        <div class="header">
+            <h1>🛥️ Yacht Rock Radio</h1>
+            <p>Smooth grooves for the sophisticated ear</p>
+        </div>
+
+        <div class="station-grid" id="stationGrid" role="radiogroup" aria-label="Radio stations"></div>
+
+        <div class="info">
+            <div class="info-content">
+                <div class="station-name" id="stationName">Select a station</div>
+                <div class="status" id="stationStatus">Ready to set sail</div>
+            </div>
+            <div class="controls-section">
+                <button class="play-pause-btn" id="playPauseBtn" onclick="togglePlayPause()" disabled aria-label="Play or pause">▶️ Play</button>
+                <div class="volume-control">
+                    <span class="volume-icon" id="volumeIcon" onclick="toggleMute()" role="button" tabindex="0" aria-label="Toggle mute">🔊</span>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" oninput="updateVolume(this.value)" aria-label="Volume control">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="visualizer-bars" id="visualizerBars" aria-hidden="true"></div>
+
+    <script>
+        const stations = [
+            { name: "Smooth Jazz", url: "https://stream.smoothjazz.com/smoothjazz" },
+            { name: "Yacht Rock Radio", url: "https://yachtrock.stream.publicradio.org/yachtrock.mp3" },
+            { name: "Smooth Lounge", url: "https://stream.smoothlounge.com.au/smoothlounge.mp3" },
+            { name: "Jazz24", url: "https://live.wostreaming.net/direct/ppm-jazz24aac-ibc1" },
+            { name: "Smooth Jazz Florida", url: "https://us4.internet-radio.com/proxy/wsjf?mp=/stream" },
+            { name: "181.FM Smooth Jazz", url: "https://listen.181fm.com/181-smoothjazz_128k.mp3" },
+            { name: "Smooth Jazz 247", url: "https://smoothjazz.cdnstream1.com/2586_128.mp3" },
+            { name: "Smooth Chill", url: "https://media-ice.musicradio.com/SmoothChill" },
+            { name: "Smooth Radio UK", url: "https://media-ice.musicradio.com/SmoothUK" },
+            { name: "Smooth Jazz Global", url: "https://smoothjazz.global.ssl.fastly.net/smoothjazz" }
+        ];
+
+        let currentStation = null;
+        let audio = new Audio();
+        audio.volume = 0.7;
+        audio.crossOrigin = "anonymous";
+        let isPlaying = false;
+        let previousVolume = 70;
+        let isMuted = false;
+
+        const stationGrid = document.getElementById('stationGrid');
+        stations.forEach((station, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'station-btn';
+            btn.textContent = station.name;
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', 'false');
+            btn.onclick = () => playStation(idx, btn);
+            stationGrid.appendChild(btn);
+        });
+
+        function playStation(idx, btn) {
+            document.querySelectorAll('.station-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-checked', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-checked', 'true');
+
+            currentStation = idx;
+            const station = stations[idx];
+            document.getElementById('stationName').textContent = station.name;
+            const statusEl = document.getElementById('stationStatus');
+            statusEl.textContent = '⏳ Loading...';
+            statusEl.className = 'status';
+
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            playPauseBtn.disabled = false;
+
+            // Reset audio to clear any previous errors
+            audio.pause();
+            audio.src = '';
+            audio.load();
+
+            audio.src = station.url;
+            audio.load();
+            
+            audio.play().then(() => {
+                isPlaying = true;
+                playPauseBtn.textContent = '⏸️ Pause';
+            }).catch(e => {
+                console.error('Playback error:', e);
+                statusEl.textContent = '⚠️ Unable to load stream';
+                statusEl.className = 'status';
+                isPlaying = false;
+                playPauseBtn.textContent = '▶️ Play';
+            });
+        }
+
+        function togglePlayPause() {
+            if (!audio.src || !currentStation) return;
+            
+            if (isPlaying) {
+                audio.pause();
+            } else {
+                audio.play().catch(e => {
+                    console.error('Playback error:', e);
+                    const statusEl = document.getElementById('stationStatus');
+                    statusEl.textContent = '⚠️ Playback failed';
+                    statusEl.className = 'status';
+                });
+            }
+        }
+
+        function updateVolume(value) {
+            const numValue = parseInt(value);
+            audio.volume = numValue / 100;
+            
+            if (numValue > 0 && isMuted) {
+                isMuted = false;
+                audio.muted = false;
+            }
+            
+            updateVolumeIcon(numValue);
+        }
+
+        function updateVolumeIcon(value) {
+            const icon = document.getElementById('volumeIcon');
+            if (value == 0 || isMuted) {
+                icon.textContent = '🔇';
+            } else if (value < 50) {
+                icon.textContent = '🔉';
+            } else {
+                icon.textContent = '🔊';
+            }
+        }
+
+        function toggleMute() {
+            if (isMuted) {
+                isMuted = false;
+                audio.muted = false;
+                const slider = document.getElementById('volumeSlider');
+                if (parseInt(slider.value) === 0) {
+                    slider.value = previousVolume || 70;
+                    audio.volume = (previousVolume || 70) / 100;
+                }
+                updateVolumeIcon(parseInt(slider.value));
+            } else {
+                isMuted = true;
+                previousVolume = parseInt(document.getElementById('volumeSlider').value) || previousVolume;
+                audio.muted = true;
+                updateVolumeIcon(0);
+            }
+        }
+
+        // Audio event handlers
+        audio.onplay = () => {
+            const statusEl = document.getElementById('stationStatus');
+            statusEl.textContent = '♫ Now playing';
+            statusEl.className = 'status playing';
+            isPlaying = true;
+            document.getElementById('playPauseBtn').textContent = '⏸️ Pause';
+        };
+
+        audio.onpause = () => {
+            const statusEl = document.getElementById('stationStatus');
+            statusEl.textContent = '⏸️ Paused';
+            statusEl.className = 'status';
+            isPlaying = false;
+            document.getElementById('playPauseBtn').textContent = '▶️ Play';
+        };
+
+        audio.onwaiting = () => {
+            const statusEl = document.getElementById('stationStatus');
+            statusEl.textContent = '⏳ Buffering...';
+            statusEl.className = 'status buffering';
+        };
+
+        audio.onplaying = () => {
+            const statusEl = document.getElementById('stationStatus');
+            if (isPlaying) {
+                statusEl.textContent = '♫ Now playing';
+                statusEl.className = 'status playing';
+            }
+        };
+
+        audio.onerror = () => {
+            const statusEl = document.getElementById('stationStatus');
+            statusEl.textContent = '⚠️ Stream error';
+            statusEl.className = 'status';
+            isPlaying = false;
+            document.getElementById('playPauseBtn').textContent = '▶️ Play';
+            console.error('Audio error:', audio.error);
+        };
+
+        audio.onstalled = () => {
+            const statusEl = document.getElementById('stationStatus');
+            statusEl.textContent = '⏳ Connection stalled...';
+            statusEl.className = 'status buffering';
+        };
+
+        // Simulated audio-reactive visualizer
+        function animateVisualizer() {
+            const bars = document.querySelectorAll('.bar');
+            let time = 0;
+            
+            function loop() {
+                time += 0.1;
+                
+                bars.forEach((bar, i) => {
+                    const baseFreq = Math.sin(time * 0.5 + i * 0.3) * 0.5 + 0.5;
+                    const midFreq = Math.sin(time * 0.8 + i * 0.2) * 0.3 + 0.3;
+                    const highFreq = Math.sin(time * 1.2 + i * 0.5) * 0.2 + 0.2;
+                    
+                    let intensity = (baseFreq + midFreq + highFreq) / 3;
+                    intensity += (Math.random() - 0.5) * 0.1;
+                    
+                    if (isPlaying) {
+                        intensity *= 1.5;
+                    } else {
+                        intensity *= 0.2;
+                    }
+                    
+                    const height = Math.max(5, intensity * 80);
+                    bar.style.height = `${height}px`;
+                });
+                
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        // Canvas ocean animation
+        const canvas = document.getElementById('ocean');
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize, { passive: true });
+
+        let wave = 0;
+        function renderOcean() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#050d1a');
+            gradient.addColorStop(0.4, '#0a1f3a');
+            gradient.addColorStop(0.7, '#1a3a5a');
+            gradient.addColorStop(1, '#2d5a8a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            wave += 0.003;
+
+            for (let i = 0; i < 8; i++) {
+                ctx.strokeStyle = `rgba(0, 180, 220, ${0.35 - i * 0.04})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                for (let x = 0; x <= canvas.width; x += 10) {
+                    const y =
+                        canvas.height * 0.55 +
+                        Math.sin(x * 0.005 + wave + i * 0.5) * 50 +
+                        Math.sin(x * 0.003 + wave * 0.5) * 30 +
+                        i * 22;
+
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            requestAnimationFrame(renderOcean);
+        }
+        renderOcean();
+
+        // Initialize visualizer bars
+        const visualizerContainer = document.getElementById('visualizerBars');
+        for (let i = 0; i < 40; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            visualizerContainer.appendChild(bar);
+        }
+        
+        animateVisualizer();
+
+        // Keyboard navigation for volume icon
+        document.getElementById('volumeIcon').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleMute();
+            }
+        });
+    </script>
 </body>
+
 </html>
